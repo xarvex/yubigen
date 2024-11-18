@@ -1,0 +1,18 @@
+[ssh]
+# If true, only allows applications explicitly set in `ssh.applications`
+# explicit_applications = false # [ DEFAULT: false]
+
+[ssh.applications]
+# When explicit_applications is false, hosts will implicitly be given
+# an application equal to itself. For example:
+#
+# "example.com" = "example.com"
+# "github.com" = "github.com"
+# "gitlab.com" = "gitlab.com"
+
+# You can, of course, give your own application name. This would need to be
+# explicit entries, as they are not equal to the URLs. This can be useful for
+# a key that gets re-used:
+#
+# "Example" = "example.com"
+# "Work" = ["github.com", "gitlab.com"]
