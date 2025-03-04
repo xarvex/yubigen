@@ -1,5 +1,5 @@
 from pathlib import Path
-from typing import Optional, cast
+from typing import cast
 import click
 from click.termui import prompt, secho
 from click.utils import echo
@@ -15,7 +15,7 @@ def ssh():
 
 @ssh.command(help="Create OpenSSH keys for YubiKeys")
 @click.option("--application", type=str, help="Application URL or name")
-def create(application: Optional[str]):
+def create(application: str | None):
     cfg = config.read()
 
     if application is None:

@@ -1,4 +1,5 @@
-from typing import Generator, List, Optional, Tuple, Type, cast
+from collections.abc import Generator
+from typing import cast
 
 from click.termui import secho
 from click.utils import echo
@@ -15,12 +16,12 @@ programdirs = PlatformDirs("yubigen", "Xarvex", ensure_exists=True)
 
 
 def list_devices(
-    connection: Type[Connection | FidoConnection],
+    connection: type[Connection | FidoConnection],
     /,
     abort: bool = False,
     quiet: bool = False,
-) -> List[Tuple[YkmanDevice, DeviceInfo]]:
-    device_list = list_all_devices([cast(Type[Connection], connection)])
+) -> list[tuple[YkmanDevice, DeviceInfo]]:
+    device_list = list_all_devices([cast(type[Connection], connection)])
 
     if len(device_list) < 1:
         if not quiet:
@@ -34,12 +35,12 @@ def list_devices(
 
 
 def iter_devices(
-    connection: Type[Connection | FidoConnection],
-    capability: Optional[CAPABILITY] = None,
+    connection: type[Connection | FidoConnection],
+    capability: CAPABILITY | None = None,
     /,
     abort: bool = False,
     quiet: bool = False,
-) -> Generator[Tuple[YkmanDevice, DeviceInfo], None, None]:
+) -> Generator[tuple[YkmanDevice, DeviceInfo], None, None]:
     device_list = list_devices(connection, abort, quiet)
     skipped = 0
 

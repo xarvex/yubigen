@@ -1,5 +1,5 @@
 from pathlib import Path
-from typing import Generic, Type, TypeVar, cast
+from typing import Generic, TypeVar, cast, override
 
 from ykman.base import YkmanDevice
 from yubikit.core import TRANSPORT, Connection
@@ -16,12 +16,12 @@ class Module(Generic[T]):
     def __init__(
         self,
         label: str,
-        connection: Type[T],
+        connection: type[T],
         capability: CAPABILITY,
     ) -> None:
-        self.label = label
-        self.connection = connection
-        self.capability = capability
+        self.label: str = label
+        self.connection: type[T] = connection
+        self.capability: CAPABILITY = capability
 
     def list_devices(self):
         return list_devices(self.connection)
@@ -69,5 +69,6 @@ class Module(Generic[T]):
 
         return dir
 
+    @override
     def __str__(self) -> str:
         return self.label

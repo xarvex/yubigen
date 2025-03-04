@@ -1,14 +1,15 @@
 from collections import deque
+from collections.abc import Iterable, Iterator
 from os import getenv
 from pathlib import Path
 import shutil
 import subprocess
-from typing import Deque, Iterable, Iterator, Optional
+from typing import Any
 
 from click.termui import confirm, secho
 from click.utils import echo
-import gpg
-from gpg.errors import KeyNotFound
+import gpg  # pyright: ignore[reportMissingTypeStubs]
+from gpg.errors import KeyNotFound  # pyright: ignore[reportMissingTypeStubs]
 from yubikit.core.smartcard import SmartCardConnection
 from yubikit.management import CAPABILITY
 from yubigen.module import Module
@@ -18,28 +19,29 @@ MODULE = Module("PGP", SmartCardConnection, CAPABILITY.OPENPGP)
 
 
 class GpgTransferInteraction:
-    current = 0
-    completed = False
+    current: int = 0
+    completed: bool = False
 
-    def __init__(self, subkeys) -> None:
-        self.subkeys = subkeys
+    def __init__(self, subkeys: Any) -> None:  # pyright: ignore[reportAny, reportExplicitAny]
+        self.subkeys: Any = subkeys  # pyright: ignore[reportExplicitAny]
 
-    def get_subkey(self):
-        return self.subkeys[self.current]
+    def get_subkey(self) -> Any:  # pyright: ignore[reportAny, reportExplicitAny]
+        return self.subkeys[self.current]  # pyright: ignore[reportAny]
 
-    def get_slot(self) -> Optional[str]:
-        subkey = self.get_subkey()
-        if subkey.can_sign == 1:
+    def get_slot(self) -> str | None:
+        subkey = self.get_subkey()  # pyright: ignore[reportAny]
+
+        if subkey.can_sign == 1:  # pyright: ignore[reportAny]
             return "1"
-        elif subkey.can_encrypt == 1:
+        elif subkey.can_encrypt == 1:  # pyright: ignore[reportAny]
             return "2"
-        elif subkey.can_authenticate == 1:
+        elif subkey.can_authenticate == 1:  # pyright: ignore[reportAny]
             return "3"
 
     def complete(self) -> None:
         self.completed = True
 
-    def interact_callback(self, keyword: str, args: str) -> Optional[str]:
+    def interact_callback(self, keyword: str, args: str) -> str | None:
         if keyword == "GET_LINE":
             if args == "cardedit.genkeys.storekeytype":
                 return self.get_slot()
@@ -60,13 +62,13 @@ class GpgTransferInteraction:
             if args == "keyedit.save.okay":
                 return "n"
 
-    def __iter__(self) -> Iterator:
+    def __iter__(self) -> Iterator[Any]:  # pyright: ignore[reportExplicitAny]
         self.current = 0
 
         return self
 
     def __len__(self) -> int:
-        return len(self.subkeys)
+        return len(self.subkeys)  # pyright: ignore[reportAny]
 
     def __next__(self) -> int:
         self.completed = False
@@ -99,11 +101,11 @@ def setup_temporary_homedir(dir: Path, create: bool = False) -> None:
 
 
 def build_gpg_args(
-    args: Optional[Iterable[str]] = None,
-    homedir: Optional[Path] = None,
+    args: Iterable[str] | None = None,
+    homedir: Path | None = None,
     /,
     bin: str = "gpg",
-) -> Deque[str]:
+) -> deque[str]:
     call = deque([] if args is None else deque(args))
 
     if homedir is not None:
@@ -113,12 +115,13 @@ def build_gpg_args(
     return call
 
 
-def interact_gpg_transfer(key_fingerprint: str, homedir: Optional[Path] = None) -> None:
+def interact_gpg_transfer(key_fingerprint: str, homedir: Path | None = None) -> None:
     with gpg.Context(home_dir=None if homedir is None else bytes(homedir)) as ctx:
-        key = ctx.get_key(key_fingerprint)
-        interaction = GpgTransferInteraction(key.subkeys)
+        key = ctx.get_key(key_fingerprint)  # pyright: ignore[reportUnknownMemberType, reportUnknownVariableType]
 
-        ctx.interact(key, interaction.interact_callback)
+        interaction = GpgTransferInteraction(key.subkeys)  # pyright: ignore[reportUnknownMemberType]
+
+        ctx.interact(key, interaction.interact_callback)  # pyright: ignore[reportUnknownArgumentType, reportUnknownMemberType]
 
 
 def create_key(full: bool = True, expert: bool = False) -> str:
@@ -141,21 +144,21 @@ def export_key(key_fingerprint: str) -> None:
         parent.mkdir(0o700, exist_ok=True)
     dir.mkdir(0o700, exist_ok=True)
 
-    subprocess.run(
+    _ = subprocess.run(
         build_gpg_args(
-            ["--armor", "--output", str(dir.joinpath("public.key")), "--export", key_fingerprint],
+            ["--armor", "--output", str(dir.joinpath("public.asc")), "--export", key_fingerprint],
             gen_homedir_path(),
         )
     )
-    subprocess.run(
+    _ = subprocess.run(
         build_gpg_args(
-            ["--armor", "--output", str(dir.joinpath("secret.key")), "--export-secret-keys", key_fingerprint],
+            ["--armor", "--output", str(dir.joinpath("secret.asc")), "--export-secret-keys", key_fingerprint],
             gen_homedir_path(),
         )
     )
-    subprocess.run(
+    _ = subprocess.run(
         build_gpg_args(
-            ["--armor", "--output", str(dir.joinpath("secret_sub.key")), "--export-secret-subkeys", key_fingerprint],
+            ["--armor", "--output", str(dir.joinpath("secret_sub.asc")), "--export-secret-subkeys", key_fingerprint],
             gen_homedir_path(),
         )
     )
@@ -168,13 +171,13 @@ def transfer_key(key_fingerprint: str) -> None:
     for file in homedir.glob("reader_"):
         file.unlink(missing_ok=True)
 
-    subprocess.run(build_gpg_args(["--kill", "gpg-agent"], bin="gpgconf"))
+    _ = subprocess.run(build_gpg_args(["--kill", "gpg-agent"], bin="gpgconf"))
     try:
         interact_gpg_transfer(key_fingerprint, homedir)
     except KeyNotFound:
         secho(f"Key '{key_fingerprint}' not found.", err=True, fg="red")
         exit(1)
-    subprocess.run(build_gpg_args(["--kill", "gpg-agent"], homedir, bin="gpgconf"))
+    _ = subprocess.run(build_gpg_args(["--kill", "gpg-agent"], homedir, bin="gpgconf"))
 
 
 def purge_keys() -> None:

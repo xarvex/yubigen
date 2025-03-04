@@ -20,7 +20,7 @@ As an additional measure, a separate GNUPG home will be used in your user's runt
         fg="yellow",
     )
     secho("This means the original secret will (or at least should) be LOST after shutdown.", fg="red")
-    confirm("\nContinue?", abort=True)
+    _ = confirm("\nContinue?", abort=True)
 
     key = create_key(not short, expert)
 
@@ -38,7 +38,7 @@ As an additional measure, a separate GNUPG home will be used in your user's runt
         transfer_key(key)
 
         if confirm("\nPurge created GNUPG home now?"):
-            confirm(
+            _ = confirm(
                 f"""Are you sure you want to purge?
 This will delete the generated GPG home at {gen_homedir_path()}.""",
                 abort=True,
@@ -59,7 +59,7 @@ def export(key: str):
     export_key(key)
 
     if confirm("\nPurge created GNUPG home now?"):
-        confirm(
+        _ = confirm(
             f"""Are you sure you want to purge?
 This will delete the generated GPG home at {gen_homedir_path()}.""",
             abort=True,
@@ -80,7 +80,7 @@ def transfer(key: str):
     transfer_key(key)
 
     if confirm("\nPurge created GNUPG home now?"):
-        confirm(
+        _ = confirm(
             f"""Are you sure you want to purge?
 This will delete the generated GPG home at {gen_homedir_path()}.""",
             abort=True,
@@ -95,7 +95,7 @@ This will delete the generated GPG home at {gen_homedir_path()}.""",
 
 @pgp.command(help="Purge all generated key information")
 def purge():
-    confirm(
+    _ = confirm(
         f"""Are you sure you want to purge?
 This will delete the generated GPG home at {gen_homedir_path()}.""",
         abort=True,

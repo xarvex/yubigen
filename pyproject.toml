@@ -1,35 +1,43 @@
 [build-system]
-requires = ["poetry-core"]
-build-backend = "poetry.core.masonry.api"
+requires = ["hatchling"]
+build-backend = "hatchling.build"
 
-[tool.poetry]
+[project]
 name = "yubigen"
 version = "0.0.1"
 description = "Credential management helper for YubiKeys."
-license = "MIT"
-authors = ["Xarvex"]
+authors = [{ name = "Xarvex" }]
 readme = "README.md"
-repository = "https://gitlab.com/xarvex/yubigen"
-keywords = ["openssh", "ssh", "yubikey"]
+requires-python = ">=3.12,<4.0"
+keywords = []
 classifiers = [
     "Environment :: Console",
     "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
     "Operating System :: OS Independent",
+    "Programming Language :: Python",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
 ]
-packages = [{ include = "*", from = "src" }]
+dependencies = [
+    "click~=8.1",
+    "platformdirs~=4.3",
+    "pydantic~=2.9",
+    "yubikey-manager~=5.5",
+]
 
-[tool.poetry.dependencies]
-click = "^8.1"
-platformdirs = "^4.3"
-pydantic = "^2.9"
-python = "^3.11"
-yubikey-manager = "^5.5"
+[project.urls]
+Repository = "https://codeberg.org/xarvex/yubigen"
 
-[tool.poetry.scripts]
+[project.scripts]
 yubigen = "yubigen.main:main"
 
+[tool.hatch.build.targets.wheel]
+packages = ["src/yubigen"]
+
 [tool.ruff]
-target-version = "py311"
+target-version = "py312"
 line-length = 140
 fix = true
 

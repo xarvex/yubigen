@@ -1,4 +1,4 @@
-from typing import Type, cast
+from typing import cast
 
 import click
 from click.termui import secho
@@ -19,7 +19,7 @@ def setup():
 @setup.command(help="Setup FIDO PIN")
 def fido():
     for device, _ in iter_devices(FidoConnection):
-        with cast(FidoConnection, device.open_connection(cast(Type[Connection], FidoConnection))) as conn:
+        with cast(FidoConnection, device.open_connection(cast(type[Connection], FidoConnection))) as conn:  # pyright: ignore[reportInvalidCast]
             change_fido_pin(conn)
 
     secho("\nComplete!", fg="magenta")

@@ -1,9 +1,10 @@
 from collections import deque
+from collections.abc import Iterable, Mapping
 from pathlib import Path
 import re
 import shutil
 import subprocess
-from typing import TYPE_CHECKING, Any, Deque, Iterable, Mapping, Optional
+from typing import TYPE_CHECKING, Any
 
 from ykman.base import YkmanDevice
 from yubikit.core.fido import FidoConnection
@@ -22,7 +23,7 @@ key_reg = re.compile(r"id_[^_]+_sk(?:_rk)?(?:_(.+))?(?<!\.pub)")
 
 def write_config(
     serial: int,
-    applications: Optional[Mapping[str, str | Iterable[str]]] = None,
+    applications: Mapping[str, str | Iterable[str]] | None = None,
     explicit_applications: bool = False,
 ) -> None:
     host_keys: dict[str, list[Path]] = {}
@@ -51,7 +52,7 @@ def write_config(
     path = dir.joinpath("ssh_config.new")
     with open(path, "w+") as file:
         for host, paths in host_keys.items():
-            file.write(f"Host {host}\n")
+            _ = file.write(f"Host {host}\n")
             file.writelines(map(lambda path: f"  IdentityFile {str(path)}\n", paths))
     shutil.move(path, path.with_name("ssh_config"))
 
@@ -70,13 +71,13 @@ def unregister_device(device_name: str) -> None:
 
 
 def build_ssh_keygen_args(
-    args: Optional[Iterable[str]] = None,
-    options: Optional[Iterable[str]] = None,
-    device_or_device_path: Optional[YkmanDevice | StrOrBytesPath] = None,
+    args: Iterable[str] | None = None,
+    options: Iterable[str] | None = None,
+    device_or_device_path: YkmanDevice | StrOrBytesPath | None = None,
     /,
     bin: str = "ssh-keygen",
-) -> Deque[str]:
-    call = deque() if args is None else deque(args)
+) -> deque[str]:
+    call: deque[str] = deque() if args is None else deque(args)
 
     if options is not None:
         for option in options:
@@ -89,7 +90,7 @@ def build_ssh_keygen_args(
     return call
 
 
-def create_key(device: YkmanDevice, info: DeviceInfo, application: Optional[str]) -> None:
+def create_key(device: YkmanDevice, info: DeviceInfo, application: str | None) -> None:
     assert info.serial is not None
 
     options = ["resident", "verify-required"]
@@ -108,7 +109,7 @@ def create_key(device: YkmanDevice, info: DeviceInfo, application: Optional[str]
     comment = f"ssh:{application}"
 
     dir = MODULE.key_home(info.serial, True)
-    subprocess.run(
+    _ = subprocess.run(
         build_ssh_keygen_args(["-t", algorithm, "-f", filename, "-C", comment], options, device),
         cwd=dir,
     )
@@ -121,7 +122,7 @@ def download_keys(device: YkmanDevice, info: DeviceInfo) -> None:
     for path in gen_dir.iterdir():
         path.unlink(missing_ok=True)
 
-    subprocess.run(build_ssh_keygen_args(["-K"], None, device), cwd=gen_dir)
+    _ = subprocess.run(build_ssh_keygen_args(["-K"], None, device), cwd=gen_dir)
 
     dir = MODULE.key_home(info.serial, True)
     for path in dir.iterdir():
