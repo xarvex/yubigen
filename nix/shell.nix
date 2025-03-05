@@ -32,7 +32,8 @@ let
   virtualenv = editablePythonSet.mkVirtualEnv "yubigen-virtualenv" uv-workspace.deps.all;
 in
 pkgs.mkShell {
-  buildInputs = pre-commit.enabledPackages ++ [ virtualenv ] ++ (with pkgs; [ uv ]);
+  nativeBuildInputs = pre-commit.enabledPackages ++ (with pkgs; [ uv ]);
+  buildInputs = [ virtualenv ];
 
   env = {
     UV_NO_SYNC = "1";
