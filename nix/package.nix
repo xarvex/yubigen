@@ -1,69 +1,66 @@
 {
-  callPackages,
   installShellFiles,
   lib,
-  stdenvNoCC,
-  symlinkJoin,
+  python3Packages,
   systemdMinimal,
-
-  pyproject-nix,
-  pythonSet,
-  uv-workspace,
+  yubikey-manager,
 }:
 
 let
-  application = (callPackages pyproject-nix.build.util { }).mkApplication {
-    venv = pythonSet.mkVirtualEnv "yubigen-virtualenv" uv-workspace.deps.default;
-    package = pythonSet.yubigen.overrideAttrs (o: {
-      meta = (o.meta or { }) // {
-        license = lib.licenses.mit;
-        maintainers = with lib.maintainers; [ xarvex ];
-        platforms = lib.platforms.linux;
-      };
-    });
-  };
-  extras = stdenvNoCC.mkDerivation {
-    pname = "${application.pname}-extras";
-    inherit (application) version;
-
-    inherit (pythonSet.yubigen) src;
-
-    nativeBuildInputs = [ installShellFiles ];
-
-    patchPhase = ''
-      runHook prePatch
-
-      substituteInPlace lib/udev/rules.d/69-yubigen.rules \
-          --replace-fail '/usr/bin/env systemd-escape' '${lib.getExe' systemdMinimal "systemd-escape"}'
-
-      runHook postPatch
-    '';
-
-    installPhase = ''
-      runHook preInstall
-
-      mkdir $out
-      cp -r --parents lib $out
-
-      installShellCompletion --cmd yubigen \
-          --bash <(_YUBIGEN_COMPLETE=bash_source ${application}/bin/yubigen) \
-          --fish <(_YUBIGEN_COMPLETE=fish_source ${application}/bin/yubigen) \
-          --zsh  <(_YUBIGEN_COMPLETE=zsh_source  ${application}/bin/yubigen)
-
-      runHook postInstall
-    '';
-  };
+  pyproject = (lib.importTOML ../pyproject.toml).project;
 in
-symlinkJoin {
-  inherit (application)
-    name
-    pname
-    version
-    meta
-    ;
+python3Packages.buildPythonPackage {
+  pname = pyproject.name;
+  inherit (pyproject) version;
+  pyproject = true;
 
-  paths = [
-    application
-    extras
+  src = lib.fileset.toSource {
+    root = ../.;
+    fileset = lib.fileset.unions [
+      ../lib
+      ../README.md
+      ../pyproject.toml
+      (lib.fileset.fileFilter (file: lib.strings.hasSuffix ".py" file.name) ../.)
+    ];
+  };
+
+  nativeBuildInputs = [ installShellFiles ];
+
+  patchPhase = ''
+    runHook prePatch
+
+    substituteInPlace lib/udev/rules.d/69-yubigen.rules \
+        --replace-fail '/usr/bin/env systemd-escape' '${lib.getExe' systemdMinimal "systemd-escape"}'
+
+    runHook postPatch
+  '';
+
+  postInstall = ''
+    cp -r --parents lib $out
+
+    installShellCompletion --cmd yubigen \
+        --bash <(_YUBIGEN_COMPLETE=bash_source $out/bin/yubigen) \
+        --fish <(_YUBIGEN_COMPLETE=fish_source $out/bin/yubigen) \
+        --zsh  <(_YUBIGEN_COMPLETE=zsh_source  $out/bin/yubigen)
+  '';
+
+  pythonImportsCheck = [ pyproject.name ];
+
+  build-system = with python3Packages; [ hatchling ];
+  dependencies = with python3Packages; [
+    click
+    gpgme
+    platformdirs
+    pydantic
+    yubikey-manager
   ];
+
+  meta = {
+    inherit (pyproject) description;
+    homepage = pyproject.urls.Repository;
+    license = lib.licenses.mit;
+    maintainers = with lib.maintainers; [ xarvex ];
+    mainProgram = pyproject.name;
+    platforms = lib.platforms.linux;
+  };
 }

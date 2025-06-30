@@ -97,7 +97,7 @@ def setup_temporary_homedir(dir: Path, create: bool = False) -> None:
     for filename in ["gpg.conf", "gpg-agent.conf", "scdaemon.conf"]:
         path = dir.joinpath(f"{filename}.new")
         path.symlink_to(original.joinpath(filename))
-        shutil.move(path, path.with_name(filename))
+        _ = shutil.move(path, path.with_name(filename))
 
 
 def build_gpg_args(

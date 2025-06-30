@@ -19,7 +19,7 @@ def create(application: str | None):
     cfg = config.read()
 
     if application is None:
-        application = prompt("Application URL or name")
+        application = cast(str, prompt("Application URL or name", type=str))
 
     echo("Starting key creation process...")
 

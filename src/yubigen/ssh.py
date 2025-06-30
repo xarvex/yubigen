@@ -54,7 +54,7 @@ def write_config(
         for host, paths in host_keys.items():
             _ = file.write(f"Host {host}\n")
             file.writelines(map(lambda path: f"  IdentityFile {str(path)}\n", paths))
-    shutil.move(path, path.with_name("ssh_config"))
+    _ = shutil.move(path, path.with_name("ssh_config"))
 
 
 def register_device(device_name: str, serial: int) -> None:
@@ -63,7 +63,7 @@ def register_device(device_name: str, serial: int) -> None:
         parent.mkdir(0o700, exist_ok=True)
 
     path.symlink_to(MODULE.key_home(serial, True).joinpath("ssh_config"))
-    shutil.move(path, path.with_name(f"config_{device_name}"))
+    _ = shutil.move(path, path.with_name(f"config_{device_name}"))
 
 
 def unregister_device(device_name: str) -> None:
@@ -128,4 +128,4 @@ def download_keys(device: YkmanDevice, info: DeviceInfo) -> None:
     for path in dir.iterdir():
         path.unlink(missing_ok=True)
     for path in gen_dir.iterdir():
-        shutil.move(path, dir.joinpath(path.name))
+        _ = shutil.move(path, dir.joinpath(path.name))
