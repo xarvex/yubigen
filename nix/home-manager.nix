@@ -19,7 +19,6 @@ in
 
     settings = lib.mkOption {
       inherit (tomlFormat) type;
-
       default = { };
       example = lib.literalExpression ''
         {
@@ -47,7 +46,7 @@ in
       }
 
       (lib.mkIf cfg.enableSshIntegration {
-        programs.ssh.includes = lib.optional config.programs.ssh.enable "${config.xdg.stateHome}/yubigen/ssh/config_*";
+        programs.ssh.includes = "${config.xdg.stateHome}/yubigen/ssh/config_*";
 
         systemd.user.services."yubigen-ssh@" = {
           Unit = {
