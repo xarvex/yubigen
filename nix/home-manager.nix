@@ -46,7 +46,7 @@ in
       }
 
       (lib.mkIf cfg.enableSshIntegration {
-        programs.ssh.includes = "${config.xdg.stateHome}/yubigen/ssh/config_*";
+        programs.ssh.includes = [ "${config.xdg.stateHome}/yubigen/ssh/config_*" ];
 
         systemd.user.services."yubigen-ssh@" = {
           Unit = {
